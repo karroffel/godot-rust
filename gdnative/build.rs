@@ -370,6 +370,26 @@ unsafe impl GodotObject for {name} {{
     }}
 }}
 
+impl GodotType for {name} {{
+    fn to_variant(&self) -> Variant {{
+        unsafe {{
+            let mut ret = sys::godot_variant::default();
+            (get_api().godot_variant_new_object)(&mut ret, self.to_sys());
+            Variant(ret)
+        }}
+    }}
+
+    fn from_variant(variant: &Variant) -> Option<Self> {{
+
+        if variant.get_type() == VariantType::Object {{
+            variant.try_to_object()
+        }} else {{
+            None
+        }}
+    }}
+
+}}
+
 "#,
             name = class.name,
             addref_if_reference = if class.is_reference { "object::add_ref(obj);" } else { "" }

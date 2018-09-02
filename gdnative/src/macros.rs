@@ -314,6 +314,47 @@ macro_rules! godot_test {
     }
 }
 
+/// Convenience macro to implement the `NativeClass` trait for a script type.
+/// The macro can be used in two ways:
+///
+///  - `godot_script_class_impls!(TypeName, header_field_name);`,
+///    where `header_field_name` is the name of the `NativeInstanceHeader` in
+///    the "script struct".
+///  - `godot_script_class_impls!(TypeName);`, which works the same as the version
+///    above, but it assumes that the header field is called `header`.
+#[macro_export]
+macro_rules! godot_script_class_impls {
+    ($class_name:ty, $header_field_name:ident) => {
+        impl NativeClass for $ class_name {
+            fn class_name() -> & 'static str {
+                stringify ! ( $ class_name)
+            }
+
+            fn get_header( & self ) -> & NativeInstanceHeader {
+                &self.$header_field_name
+            }
+        }
+    };
+
+    ($class_name:ty) => {
+        godot_script_class_impls!($class_name, header);
+    };
+}
+
+#[macro_export]
+macro_rules! godot_create_property {
+    ($class_name:ty, $prop_name:ident, $def:expr) => {
+        $crate::init::Property {
+            name: stringify!($prop_name),
+            default: $def,
+            getter: |this: &mut $class_name| this.$prop_name,
+            setter: |this: &mut $class_name, v| this.$prop_name = v,
+            hint: $crate::init::PropertyHint::None,
+            usage: $crate::init::PropertyUsage::DEFAULT,
+        }
+    };
+}
+
 /// Convenience macro to wrap an object's constructor into a function pointer
 /// that can be passed to the engine when registering a class.
 #[macro_export]

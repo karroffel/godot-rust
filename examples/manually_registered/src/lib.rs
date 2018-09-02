@@ -36,17 +36,7 @@ impl MyClass {
     }
 }
 
-impl NativeClass for MyClass {
-    fn class_name() -> &'static str {
-        "MyClass"
-    }
-
-    fn get_header(&self) -> &NativeInstanceHeader {
-        &self.header
-    }
-}
-
-fn init(gdnative_init: init::InitHandle) {
+fn register_myclass(gdnative_init: init::InitHandle) {
     use godot::init::*;
 
     let constructor = godot_wrap_constructor!(MyClass, MyClass::new);
@@ -88,6 +78,22 @@ fn init(gdnative_init: init::InitHandle) {
     class.add_method_advanced(ready_method);
     class.add_method("_process", process_method);
     class.add_method("_exit_tree", exit_tree_method);
+}
+
+impl NativeClass for MyClass {
+    fn class_name() -> &'static str {
+        "MyClass"
+    }
+
+    fn get_header(&self) -> &NativeInstanceHeader {
+        &self.header
+    }
+}
+
+fn init(gdnative_init: init::InitHandle) {
+    use godot::init::*;
+
+    register_myclass(gdnative_init);
 }
 
 godot_nativescript_init!(init as godot_rust_nativescript_init);

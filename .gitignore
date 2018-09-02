@@ -3,5 +3,7 @@ target
 *.rlib
 **/Cargo.lock
 .vscode
+.idea
+*.iml
 test/project/lib
 **/.import/*
