@@ -1,0 +1,12 @@
+[package]
+name = "derive_example"
+version = "0.1.0"
+authors = ["karroffel <therzog@mail.de>"]
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+gdnative = { path = "../../gdnative" }
+gdnative-derive = { path = "../../derive" }

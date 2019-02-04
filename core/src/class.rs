@@ -15,16 +15,13 @@ pub struct NativeInstanceHeader {
     pub this: *mut sys::godot_object,
 }
 
-pub trait NativeClass {
+pub trait NativeClass: Sized {
     fn class_name() -> &'static str;
+    fn base_class() -> &'static str;
 
-    fn get_header(&self) -> &NativeInstanceHeader;
+    fn construct() -> Self;
 
-    fn as_object(&self) -> &Object {
-        unsafe {
-            mem::transmute(self.get_header())
-        }
-    }
+    fn destruct(self) {}
 }
 
 /// A reference to a rust native script.
@@ -271,7 +268,11 @@ class $name:ident: $owner:ty {
 
         impl $crate::NativeClass for $name {
             fn class_name() -> &'static str { stringify!($name) }
-            fn get_header(&self) -> &$crate::NativeInstanceHeader { &self.header }
+            fn base_class() -> &'statis str { stringify!($owner) }
+
+            fn constructor() -> Self {
+                Self::constructor()
+            }
         }
     )
 }

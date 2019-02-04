@@ -4,6 +4,7 @@
 members = [
     "sys",
     "gdnative",
+    "derive",
     "core",
     "physics",
     "graphics",
@@ -22,4 +23,5 @@ members = [
     "examples/hello_world",
     "examples/spinning_cube",
     "examples/manually_registered",
+    "examples/derive_example",
 ]
