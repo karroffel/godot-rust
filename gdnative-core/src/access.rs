@@ -34,6 +34,9 @@ where
 pub unsafe trait Guard: Drop {
     type Target;
     fn len(&self) -> usize;
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
     fn read_ptr(&self) -> *const Self::Target;
 }
 

@@ -11,13 +11,16 @@ fn main() {
     let mut methods_output = File::create(out_path.join("bindings_methods.rs")).unwrap();
 
     // gdnative-core already implements all dependencies of Object
-    let to_ignore = { strongly_connected_components(&Api::new(), "Object", None) };
+    let to_ignore = {
+        let visited = std::collections::HashSet::new();
+        strongly_connected_components(&Api::new_from_api_json(), "Object", visited)
+    };
 
     generate_bindings(
         &mut types_output,
         &mut traits_output,
         &mut methods_output,
-        Some(to_ignore),
+        to_ignore,
     )
     .unwrap();
 }

@@ -66,6 +66,7 @@ macro_rules! variant_to_type_transmute {
         $(
             $(#[$to_attr])*
             pub fn $to_method(&self) -> $ToType {
+                #[allow(clippy::useless_transmute)]
                 unsafe {
                     transmute((get_api().$to_gd_method)(&self.0))
                 }
@@ -76,6 +77,7 @@ macro_rules! variant_to_type_transmute {
                 if self.get_type() != VariantType::$TryType {
                     return None;
                 }
+                #[allow(clippy::useless_transmute)]
                 unsafe {
                     Some(transmute((get_api().$try_gd_method)(&self.0)))
                 }
@@ -259,23 +261,6 @@ impl Variant {
             let api = get_api();
             let mut dest = sys::godot_variant::default();
             (api.godot_variant_new_nil)(&mut dest);
-            Variant(dest)
-        }
-    }
-
-    /// Creates a `Variant` wrapping a string.
-    pub fn from_str<S>(s: S) -> Variant
-    where
-        S: AsRef<str>,
-    {
-        unsafe {
-            let api = get_api();
-            let mut dest = sys::godot_variant::default();
-            let val = s.as_ref();
-            let mut godot_s =
-                (api.godot_string_chars_to_utf8_with_len)(val.as_ptr() as *const _, val.len() as _);
-            (api.godot_variant_new_string)(&mut dest, &godot_s);
-            (api.godot_string_destroy)(&mut godot_s);
             Variant(dest)
         }
     }
@@ -500,7 +485,8 @@ impl Variant {
                 (api.godot_variant_call)(&mut self.0, &method.0, &mut first, 0, &mut err);
             } else {
                 // TODO: double check that this is safe.
-                let gd_args: &[sys::godot_variant] = transmute(args);
+                let gd_args: &[sys::godot_variant] =
+                    std::slice::from_raw_parts(args.as_ptr() as *const _, args.len());
                 let mut first = &gd_args[0] as *const sys::godot_variant;
                 (api.godot_variant_call)(
                     &mut self.0,
@@ -520,11 +506,11 @@ impl Variant {
     }
 
     pub(crate) fn cast_ref<'l>(ptr: *const sys::godot_variant) -> &'l Variant {
-        unsafe { transmute(ptr) }
+        unsafe { &*(ptr as *const Variant) }
     }
 
     pub(crate) fn cast_mut_ref<'l>(ptr: *mut sys::godot_variant) -> &'l mut Variant {
-        unsafe { transmute(ptr) }
+        unsafe { &mut *(ptr as *mut Variant) }
     }
 
     /// Returns the internal ffi representation of the variant and consumes
@@ -622,7 +608,6 @@ variant_from_ref!(
     impl From<&Basis> : from_basis;
     impl From<&Color> : from_color;
     impl From<&Aabb> : from_aabb;
-    impl From<&String> : from_str;
     impl From<&Rid> : from_rid;
     impl From<&NodePath> : from_node_path;
     impl From<&GodotString> : from_godot_string;
@@ -638,7 +623,15 @@ variant_from_ref!(
 
 impl<'l> From<&'l str> for Variant {
     fn from(v: &str) -> Variant {
-        Variant::from_str(v)
+        unsafe {
+            let api = get_api();
+            let mut dest = sys::godot_variant::default();
+            let mut godot_s =
+                (api.godot_string_chars_to_utf8_with_len)(v.as_ptr() as *const _, v.len() as _);
+            (api.godot_variant_new_string)(&mut dest, &godot_s);
+            (api.godot_string_destroy)(&mut godot_s);
+            Variant(dest)
+        }
     }
 }
 
@@ -892,7 +885,7 @@ impl FromVariant for f64 {
 
 impl ToVariant for String {
     fn to_variant(&self) -> Variant {
-        Variant::from_str(&self)
+        Variant::from(self.as_str())
     }
 }
 

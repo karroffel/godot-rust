@@ -1,6 +1,5 @@
 use crate::get_api;
 use crate::sys;
-use std::mem::transmute;
 
 /// RGBA color with 32 bits floating point components.
 #[repr(C)]
@@ -21,8 +20,9 @@ impl Color {
         Color { r, g, b, a: 1.0 }
     }
 
-    fn as_sys_color(&self) -> &sys::godot_color {
-        unsafe { transmute(self) }
+    #[doc(hidden)]
+    pub fn as_sys_color(&self) -> &sys::godot_color {
+        unsafe { &*(self as *const Color as *const sys::godot_color) }
     }
 
     pub fn h(&self) -> f32 {

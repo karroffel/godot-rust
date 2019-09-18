@@ -256,6 +256,16 @@ impl<T: NativeClass> Instance<T> {
     }
 }
 
+impl<T> Default for Instance<T>
+where
+    T: NativeClass,
+    T::Base: Instanciable,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> Clone for Instance<T>
 where
     T: NativeClass,

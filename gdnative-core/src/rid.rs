@@ -9,6 +9,7 @@ use std::mem::transmute;
 #[derive(Copy, Clone, Debug)]
 pub struct Rid(pub(crate) sys::godot_rid);
 
+#[allow(clippy::trivially_copy_pass_by_ref)]
 impl Rid {
     pub fn new() -> Self {
         Rid::default()
@@ -18,7 +19,7 @@ impl Rid {
         unsafe { (get_api().godot_rid_get_id)(&self.0) }
     }
 
-    pub fn operator_less(&self, b: &Rid) -> bool {
+    pub fn operator_less(&self, b: Rid) -> bool {
         unsafe { (get_api().godot_rid_operator_less)(&self.0, &b.0) }
     }
 

@@ -165,7 +165,7 @@ fn generate_class_bindings(
         }
 
         if class.instanciable {
-            generate_instanciable_impl(output_trait_impls, class)?;
+            generate_default_impl(output_types_impls, class)?;
         }
     }
 

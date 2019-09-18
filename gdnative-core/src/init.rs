@@ -45,6 +45,7 @@ pub struct InitHandle {
     handle: *mut libc::c_void,
 }
 
+#[allow(clippy::trivially_copy_pass_by_ref)]
 impl InitHandle {
     #[doc(hidden)]
     pub unsafe fn new(handle: *mut libc::c_void) -> Self {
@@ -86,7 +87,7 @@ impl InitHandle {
                     _this: *mut sys::godot_object,
                     _method_data: *mut libc::c_void,
                     user_data: *mut libc::c_void,
-                ) -> () {
+                ) {
                     let wrapper = C::UserData::consume_user_data_unchecked(user_data);
                     drop(wrapper)
                 }
@@ -106,16 +107,16 @@ impl InitHandle {
                 destroy,
             );
 
-            let mut builder = ClassBuilder {
+            let builder = ClassBuilder {
                 init_handle: self.handle,
                 class_name,
                 _marker: PhantomData,
             };
 
-            C::register_properties(&mut builder);
+            C::register_properties(&builder);
 
             // register methods
-            C::register(&mut builder);
+            C::register(&builder);
         }
     }
 
@@ -154,7 +155,7 @@ impl InitHandle {
                     _this: *mut sys::godot_object,
                     _method_data: *mut libc::c_void,
                     user_data: *mut libc::c_void,
-                ) -> () {
+                ) {
                     let wrapper = C::UserData::consume_user_data_unchecked(user_data);
                     drop(wrapper)
                 }
@@ -174,16 +175,16 @@ impl InitHandle {
                 destroy,
             );
 
-            let mut builder = ClassBuilder {
+            let builder = ClassBuilder {
                 init_handle: self.handle,
                 class_name,
                 _marker: PhantomData,
             };
 
-            C::register_properties(&mut builder);
+            C::register_properties(&builder);
 
             // register methods
-            C::register(&mut builder);
+            C::register(&builder);
         }
     }
 }
@@ -263,7 +264,7 @@ impl<C: NativeClass> ClassBuilder<C> {
 
     pub fn add_method(&self, name: &str, method: ScriptMethodFn) {
         self.add_method_advanced(ScriptMethod {
-            name: name,
+            name,
             method_ptr: Some(method),
             attributes: ScriptMethodAttributes {
                 rpc_mode: RpcMode::Disabled,
@@ -298,7 +299,7 @@ impl<C: NativeClass> ClassBuilder<C> {
                 PropertyHint::NodePathToEditedNode | PropertyHint::None => None,
             };
             let hint_string = if let Some(text) = hint_text {
-                GodotString::from_str(text)
+                GodotString::from(text)
             } else {
                 GodotString::default()
             };
@@ -333,13 +334,13 @@ impl<C: NativeClass> ClassBuilder<C> {
 
     pub fn add_signal(&self, signal: Signal) {
         unsafe {
-            let name = GodotString::from_str(signal.name);
+            let name = GodotString::from(signal.name);
             let mut args = signal
                 .args
                 .iter()
                 .map(|arg| {
-                    let arg_name = GodotString::from_str(arg.name);
-                    let hint_string = GodotString::new();
+                    let arg_name = GodotString::from(arg.name);
+                    let hint_string = GodotString::default();
                     sys::godot_signal_argument {
                         name: arg_name.to_sys(),
                         type_: arg.default.get_type() as i32,
@@ -451,8 +452,8 @@ bitflags! {
 }
 
 impl PropertyUsage {
-    pub fn to_sys(&self) -> sys::godot_property_usage_flags {
-        unsafe { mem::transmute(*self) }
+    pub fn to_sys(self) -> sys::godot_property_usage_flags {
+        unsafe { mem::transmute(self) }
     }
 }
 

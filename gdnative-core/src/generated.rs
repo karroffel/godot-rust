@@ -1,5 +1,7 @@
 #![allow(non_snake_case)] // because of the generated bindings.
 #![allow(unused_imports)]
+#![allow(clippy::unused_unit)]
+#![allow(clippy::trivially_copy_pass_by_ref)]
 
 use super::*;
 use crate::get_api;

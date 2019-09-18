@@ -35,14 +35,17 @@ impl ColorArray {
     /// Appends an element at the end of the array
     pub fn push(&mut self, color: &Color) {
         unsafe {
-            (get_api().godot_pool_color_array_append)(&mut self.0, transmute(color));
+            (get_api().godot_pool_color_array_append)(
+                &mut self.0,
+                color.as_sys_color() as *const sys::godot_color,
+            );
         }
     }
 
     /// Appends a `ColorArray` at the end of this array.
     pub fn push_array(&mut self, array: &ColorArray) {
         unsafe {
-            (get_api().godot_pool_color_array_append_array)(&mut self.0, transmute(array));
+            (get_api().godot_pool_color_array_append_array)(&mut self.0, array.sys());
         }
     }
 
@@ -50,8 +53,11 @@ impl ColorArray {
     /// Insert a new int at a given position in the array.
     pub fn insert(&mut self, offset: i32, color: &Color) -> bool {
         unsafe {
-            let status =
-                (get_api().godot_pool_color_array_insert)(&mut self.0, offset, transmute(color));
+            let status = (get_api().godot_pool_color_array_insert)(
+                &mut self.0,
+                offset,
+                color.as_sys_color() as *const sys::godot_color,
+            );
             status != sys::godot_error_GODOT_OK
         }
     }
@@ -83,7 +89,11 @@ impl ColorArray {
     /// Sets the value of the element at the given offset.
     pub fn set(&mut self, idx: i32, color: &Color) {
         unsafe {
-            (get_api().godot_pool_color_array_set)(&mut self.0, idx, transmute(color));
+            (get_api().godot_pool_color_array_set)(
+                &mut self.0,
+                idx,
+                color.as_sys_color() as *const sys::godot_color,
+            );
         }
     }
 
@@ -92,7 +102,11 @@ impl ColorArray {
         unsafe { (get_api().godot_pool_color_array_size)(&self.0) }
     }
 
-    pub fn read<'a>(&'a self) -> Read<'a> {
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn read(&self) -> Read<'_> {
         unsafe {
             MaybeUnaligned::new(ReadGuard::new(self.sys()))
                 .try_into_aligned()
@@ -100,7 +114,7 @@ impl ColorArray {
         }
     }
 
-    pub fn write<'a>(&'a mut self) -> Write<'a> {
+    pub fn write(&mut self) -> Write<'_> {
         unsafe {
             MaybeUnaligned::new(WriteGuard::new(self.sys() as *mut _))
                 .try_into_aligned()

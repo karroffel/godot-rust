@@ -7,7 +7,7 @@ use crate::Variant;
 use std::cmp::Ordering;
 use std::ffi::CStr;
 use std::fmt;
-use std::mem::{forget, transmute};
+use std::mem::forget;
 use std::ops::Range;
 use std::slice;
 use std::str;
@@ -44,20 +44,6 @@ macro_rules! impl_methods {
 impl GodotString {
     pub fn new() -> Self {
         GodotString::default()
-    }
-
-    pub fn from_str<S>(s: S) -> Self
-    where
-        S: AsRef<str>,
-    {
-        unsafe {
-            let api = get_api();
-            let val = s.as_ref();
-            let godot_s =
-                (api.godot_string_chars_to_utf8_with_len)(val.as_ptr() as *const _, val.len() as _);
-
-            GodotString(godot_s)
-        }
     }
 
     pub fn len(&self) -> usize {
@@ -221,6 +207,22 @@ impl ToString for GodotString {
     }
 }
 
+impl<S> From<S> for GodotString
+where
+    S: AsRef<str>,
+{
+    fn from(s: S) -> GodotString {
+        unsafe {
+            let api = get_api();
+            let val = s.as_ref();
+            let godot_s =
+                (api.godot_string_chars_to_utf8_with_len)(val.as_ptr() as *const _, val.len() as _);
+
+            GodotString(godot_s)
+        }
+    }
+}
+
 impl std::hash::Hash for GodotString {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         state.write_u64(self.u64_hash());
@@ -237,11 +239,12 @@ impl Utf8String {
         unsafe { (get_api().godot_char_string_length)(&self.0) }
     }
 
-    fn data(&self) -> &u8 {
-        unsafe {
-            // casting from *const i8 to &u8
-            transmute((get_api().godot_char_string_get_data)(&self.0))
-        }
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    fn data(&self) -> *const u8 {
+        unsafe { (get_api().godot_char_string_get_data)(&self.0) as *const u8 }
     }
 
     pub fn as_bytes(&self) -> &[u8] {
@@ -272,11 +275,11 @@ impl fmt::Debug for Utf8String {
 pub struct StringName(pub(crate) sys::godot_string_name);
 
 impl StringName {
-    pub fn from_str<S>(s: S)
+    pub fn from<S>(s: S)
     where
         S: AsRef<str>,
     {
-        let gd_string = GodotString::from_str(s);
+        let gd_string = GodotString::from(s);
         StringName::from_godot_string(&gd_string);
     }
 
@@ -333,15 +336,6 @@ impl PartialOrd for StringName {
                 Some(Ordering::Greater)
             }
         }
-    }
-}
-
-impl<S> From<S> for GodotString
-where
-    S: AsRef<str>,
-{
-    fn from(s: S) -> GodotString {
-        GodotString::from_str(s)
     }
 }
 

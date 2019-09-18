@@ -29,7 +29,7 @@ impl NodePath {
     /// A path is absolute if it starts with a slash. Absolute paths are only valid in the
     /// global scene tree, not within individual scenes. In a relative path, `"."` and `".."`
     /// indicate the current node and its parent.
-    pub fn from_str(path: &str) -> Self {
+    pub fn new_from_str(path: &str) -> Self {
         unsafe {
             let mut dest = sys::godot_node_path::default();
             let api = get_api();
@@ -90,11 +90,6 @@ impl NodePath {
         unsafe { GodotString((get_api().godot_node_path_as_string)(&self.0)) }
     }
 
-    /// Returns the `NodePath` as a `String`
-    pub fn to_string(&self) -> String {
-        self.to_godot_string().to_string()
-    }
-
     #[doc(hidden)]
     pub fn sys(&self) -> *const sys::godot_node_path {
         &self.0
@@ -116,13 +111,19 @@ where
     S: AsRef<str>,
 {
     fn from(s: S) -> NodePath {
-        NodePath::from_str(&s.as_ref())
+        NodePath::new_from_str(&s.as_ref())
     }
 }
 
 impl Into<String> for NodePath {
     fn into(self) -> String {
         self.to_string()
+    }
+}
+
+impl ToString for NodePath {
+    fn to_string(&self) -> String {
+        self.to_godot_string().to_string()
     }
 }
 

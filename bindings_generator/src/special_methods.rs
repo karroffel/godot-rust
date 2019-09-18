@@ -118,23 +118,6 @@ impl FromVariant for {name} {{
     Ok(())
 }
 
-pub fn generate_instanciable_impl(output: &mut impl Write, class: &GodotClass) -> GeneratorResult {
-    assert!(class.instanciable);
-
-    writeln!(
-        output,
-        r#"
-impl Instanciable for {name} {{
-    fn construct() -> Self {{
-        {name}::new()
-    }}
-}}"#,
-        name = class.name,
-    )?;
-
-    Ok(())
-}
-
 pub fn generate_free_impl(
     output: &mut impl Write,
     api: &Api,
@@ -198,7 +181,10 @@ pub fn generate_dynamic_cast(output: &mut impl Write, class: &GodotClass) -> Gen
         r#"
     /// Generic dynamic cast.
     pub {maybe_unsafe}fn cast<T: GodotObject>(&self) -> Option<T> {{
-        object::godot_cast::<T>(self.this)
+        #[allow(unused_unsafe)]
+        unsafe {{
+            object::godot_cast::<T>(self.this)
+        }}
     }}"#,
         maybe_unsafe = if class.is_pointer_safe() {
             ""
@@ -270,7 +256,7 @@ impl std::ops::Deref for {name} {{
 
     fn deref(&self) -> &{base} {{
         unsafe {{
-            std::mem::transmute(self)
+            &*(self as *const {name} as *const {base})
         }}
     }}
 }}
@@ -278,12 +264,27 @@ impl std::ops::Deref for {name} {{
 impl std::ops::DerefMut for {name} {{
     fn deref_mut(&mut self) -> &mut {base} {{
         unsafe {{
-            std::mem::transmute(self)
+            &mut *(self as *mut {name} as *mut {base})
         }}
     }}
 }}"#,
         name = class.name,
         base = class.base_class,
+    )?;
+
+    Ok(())
+}
+
+pub fn generate_default_impl(output: &mut impl Write, class: &GodotClass) -> GeneratorResult {
+    writeln!(
+        output,
+        r#"
+impl Default for {name} {{
+    fn default() -> Self {{
+        Self::new()
+    }}
+}}"#,
+        name = class.name
     )?;
 
     Ok(())

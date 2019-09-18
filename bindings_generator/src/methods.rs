@@ -219,17 +219,34 @@ r#"    let mut argument_buffer: Vec<*const sys::godot_variant> = Vec::with_capac
             )?;
         }
 
-        writeln!(output, r#"
+        writeln!(
+            output,
+            r#"
     for arg in varargs {{
         argument_buffer.push(arg.sys() as *const _);
     }}
-    let ret = Variant::from_sys((gd_api.godot_method_bind_call)(method_bind, obj_ptr, argument_buffer.as_mut_ptr(), argument_buffer.len() as _, ptr::null_mut()));"#
+"#
         )?;
 
-        if rust_ret_type.starts_with("Option") {
-            writeln!(output, r#"    ret.try_to_object()"#)?;
+        if rust_ret_type == "Variant" {
+            // no conversion necessary, return directly
+            writeln!(output, r#"
+    Variant::from_sys(
+        (gd_api.godot_method_bind_call)(method_bind, obj_ptr, argument_buffer.as_mut_ptr(), argument_buffer.len() as _, ptr::null_mut())
+    )"#
+            )?;
         } else {
-            writeln!(output, r#"    ret.into()"#)?;
+            writeln!(output, r#"
+    let ret = Variant::from_sys(
+        (gd_api.godot_method_bind_call)(method_bind, obj_ptr, argument_buffer.as_mut_ptr(), argument_buffer.len() as _, ptr::null_mut())
+    );"#
+            )?;
+
+            if rust_ret_type.starts_with("Option") {
+                writeln!(output, r#"    ret.try_to_object()"#)?;
+            } else {
+                writeln!(output, r#"    ret.into()"#)?;
+            }
         }
     } else {
         writeln!(

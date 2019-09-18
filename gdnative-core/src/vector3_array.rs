@@ -33,25 +33,31 @@ impl Vector3Array {
     }
 
     /// Appends a vector to the end of the array.
-    pub fn push(&mut self, vector: &Vector3) {
+    pub fn push(&mut self, vector: Vector3) {
         unsafe {
-            (get_api().godot_pool_vector3_array_append)(&mut self.0, transmute(vector));
+            (get_api().godot_pool_vector3_array_append)(
+                &mut self.0,
+                &vector as *const _ as *const sys::godot_vector3,
+            );
         }
     }
 
     /// Appends each vector to the end of the array.
     pub fn push_array(&mut self, vectors: &Vector3Array) {
         unsafe {
-            (get_api().godot_pool_vector3_array_append_array)(&mut self.0, transmute(vectors));
+            (get_api().godot_pool_vector3_array_append_array)(&mut self.0, vectors.sys());
         }
     }
 
     // TODO(error handling)
     /// Inserts a vector at the given offset.
-    pub fn insert(&mut self, offset: i32, vector: &Vector3) -> bool {
+    pub fn insert(&mut self, offset: i32, vector: Vector3) -> bool {
         unsafe {
-            let status =
-                (get_api().godot_pool_vector3_array_insert)(&mut self.0, offset, transmute(vector));
+            let status = (get_api().godot_pool_vector3_array_insert)(
+                &mut self.0,
+                offset,
+                &vector as *const _ as *const sys::godot_vector3,
+            );
             status != sys::godot_error_GODOT_OK
         }
     }
@@ -81,9 +87,13 @@ impl Vector3Array {
     }
 
     /// Sets the value of the element at the given offset.
-    pub fn set(&mut self, idx: i32, vector: &Vector3) {
+    pub fn set(&mut self, idx: i32, vector: Vector3) {
         unsafe {
-            (get_api().godot_pool_vector3_array_set)(&mut self.0, idx, transmute(vector));
+            (get_api().godot_pool_vector3_array_set)(
+                &mut self.0,
+                idx,
+                &vector as *const _ as *const sys::godot_vector3,
+            );
         }
     }
 
@@ -92,7 +102,11 @@ impl Vector3Array {
         unsafe { (get_api().godot_pool_vector3_array_size)(&self.0) }
     }
 
-    pub fn read<'a>(&'a self) -> Read<'a> {
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn read(&self) -> Read<'_> {
         unsafe {
             MaybeUnaligned::new(ReadGuard::new(self.sys()))
                 .try_into_aligned()
@@ -100,7 +114,7 @@ impl Vector3Array {
         }
     }
 
-    pub fn write<'a>(&'a mut self) -> Write<'a> {
+    pub fn write(&mut self) -> Write<'_> {
         unsafe {
             MaybeUnaligned::new(WriteGuard::new(self.sys() as *mut _))
                 .try_into_aligned()
