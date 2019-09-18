@@ -20,19 +20,19 @@ pub(crate) fn parse_derive_input(input: TokenStream) -> DeriveData {
     let inherit_attr = input
         .attrs
         .iter()
-        .find(|a| a.path.segments[0].ident == "inherit")
+        .find(|a| a.path.is_ident("inherit"))
         .expect("No \"inherit\" attribute found");
 
     // read base class
-    let base = syn::parse::<Type>(inherit_attr.tts.clone().into())
+    let base = syn::parse::<Type>(inherit_attr.tokens.clone().into())
         .expect("`inherits` attribute requires the base type as an argument.");
 
     let user_data = input
         .attrs
         .iter()
-        .find(|a| a.path.segments[0].ident == "user_data")
+        .find(|a| a.path.is_ident("user_data"))
         .map(|attr| {
-            syn::parse::<Type>(attr.tts.clone().into())
+            syn::parse::<Type>(attr.tokens.clone().into())
                 .expect("`userdata` attribute requires a type as an argument.")
         })
         .unwrap_or_else(|| {

@@ -74,7 +74,7 @@ impl VariantRepr {
         }
     }
 
-    fn to_variant(&self) -> TokenStream2 {
+    fn create_to_variant_impl(&self) -> TokenStream2 {
         match self {
             VariantRepr::Unit => {
                 quote! { ::gdnative::Dictionary::new().to_variant() }
@@ -125,7 +125,7 @@ impl VariantRepr {
         }
     }
 
-    fn from_variant(&self, variant: &Ident, ctor: &TokenStream2) -> TokenStream2 {
+    fn create_from_variant_impl(&self, variant: &Ident, ctor: &TokenStream2) -> TokenStream2 {
         match self {
             VariantRepr::Unit => {
                 quote! {
@@ -156,7 +156,7 @@ impl VariantRepr {
                     let ctor_idents = idents.iter();
 
                     let self_len = Literal::i32_suffixed(types.len() as i32);
-                    let indices = (0..fields.len() as i32).map(|n| Literal::i32_suffixed(n));
+                    let indices = (0..fields.len() as i32).map(Literal::i32_suffixed);
 
                     quote! {
                         {
@@ -212,14 +212,14 @@ pub(crate) fn extend_bounds(generics: Generics, repr: &Repr, bound: &syn::Path) 
         fn visit_type_path(&mut self, type_path: &'ast TypePath) {
             let path = &type_path.path;
             if let Some(seg) = path.segments.last() {
-                if seg.value().ident == "PhantomData" {
+                if seg.ident == "PhantomData" {
                     // things inside PhantomDatas doesn't need to be bounded, so stopping
                     // recursive visit here
                     return;
                 }
             }
             if let Some(seg) = path.segments.first() {
-                if self.all_type_params.contains(&seg.value().ident) {
+                if self.all_type_params.contains(&seg.ident) {
                     // if the first segment of the type path is a known type variable, then this
                     // is likely an associated type
                     // TODO: what about cases like <Foo<T> as Trait>::A? Maybe too fringe to be
@@ -237,7 +237,7 @@ pub(crate) fn extend_bounds(generics: Generics, repr: &Repr, bound: &syn::Path) 
         .collect();
 
     let mut visitor = Visitor {
-        all_type_params: all_type_params,
+        all_type_params,
         used: HashSet::new(),
     };
 
@@ -347,7 +347,7 @@ pub(crate) fn derive_to_variant(input: TokenStream) -> TokenStream {
     let return_expr = match repr {
         Repr::Struct(var_repr) => {
             let destructure_pattern = var_repr.destructure_pattern();
-            let to_variant = var_repr.to_variant();
+            let to_variant = var_repr.create_to_variant_impl();
             quote! {
                 {
                     let #ident #destructure_pattern = &self;
@@ -360,7 +360,7 @@ pub(crate) fn derive_to_variant(input: TokenStream) -> TokenStream {
                 .iter()
                 .map(|(var_ident, var_repr)| {
                     let destructure_pattern = var_repr.destructure_pattern();
-                    let to_variant = var_repr.to_variant();
+                    let to_variant = var_repr.create_to_variant_impl();
                     let var_ident_string = format!("{}", var_ident);
                     let var_ident_string_literal = Literal::string(&var_ident_string);
                     quote! {
@@ -410,7 +410,7 @@ pub(crate) fn derive_from_variant(input: TokenStream) -> TokenStream {
 
     let return_expr = match repr {
         Repr::Struct(var_repr) => {
-            let from_variant = var_repr.from_variant(&input_ident, &quote! { #ident });
+            let from_variant = var_repr.create_from_variant_impl(&input_ident, &quote! { #ident });
             quote! {
                 {
                     #from_variant
@@ -430,7 +430,7 @@ pub(crate) fn derive_from_variant(input: TokenStream) -> TokenStream {
                 .map(|string| Literal::string(&string));
 
             let var_from_variants = variants.iter().map(|(var_ident, var_repr)| {
-                var_repr.from_variant(&var_input_ident, &quote! { #ident::#var_ident })
+                var_repr.create_from_variant_impl(&var_input_ident, &quote! { #ident::#var_ident })
             });
 
             let var_input_ident_iter = std::iter::repeat(&var_input_ident);

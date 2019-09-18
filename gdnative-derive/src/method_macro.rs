@@ -1,11 +1,11 @@
-use syn::{FnArg, ImplItem, ItemImpl, MethodSig, Pat, PatIdent, Type};
+use syn::{FnArg, ImplItem, ItemImpl, Pat, PatIdent, Signature, Type};
 
 use proc_macro::TokenStream;
 use syn::export::Span;
 
 pub(crate) struct ClassMethodExport {
     pub(crate) class_ty: Box<Type>,
-    pub(crate) methods: Vec<MethodSig>,
+    pub(crate) methods: Vec<Signature>,
 }
 
 /// Parse the input.
@@ -42,7 +42,7 @@ fn impl_gdnative_expose(ast: ItemImpl) -> (ItemImpl, ClassMethodExport) {
         methods: vec![],
     };
 
-    let mut methods_to_export = Vec::<MethodSig>::new();
+    let mut methods_to_export = Vec::<Signature>::new();
 
     // extract all methods that have the #[export] attribute.
     // add all items back to the impl block again.
@@ -57,7 +57,7 @@ fn impl_gdnative_expose(ast: ItemImpl) -> (ItemImpl, ClassMethodExport) {
                     };
 
                     for path in attr.path.segments.iter() {
-                        if path.ident.to_string() == "export" {
+                        if path.ident == "export" {
                             return correct_style;
                         }
                     }
@@ -84,7 +84,7 @@ fn impl_gdnative_expose(ast: ItemImpl) -> (ItemImpl, ClassMethodExport) {
     // into the list of things to export.
     {
         for mut method in methods_to_export {
-            let generics = &method.decl.generics;
+            let generics = &method.generics;
 
             if generics.type_params().count() > 0 {
                 eprintln!("type parameters not allowed in exported functions");
@@ -101,31 +101,28 @@ fn impl_gdnative_expose(ast: ItemImpl) -> (ItemImpl, ClassMethodExport) {
 
             // remove "mut" from arguments.
             // give every wildcard a (hopefully) unique name.
-            method
-                .decl
-                .inputs
-                .iter_mut()
-                .enumerate()
-                .for_each(|(i, arg)| match arg {
-                    FnArg::Captured(cap) => match cap.pat.clone() {
+            method.inputs.iter_mut().enumerate().for_each(|(i, arg)| {
+                if let FnArg::Typed(typed) = arg {
+                    match *typed.pat.clone() {
                         Pat::Wild(_) => {
                             let name = format!("___unused_arg_{}", i);
 
-                            cap.pat = Pat::Ident(PatIdent {
+                            typed.pat = Box::new(Pat::Ident(PatIdent {
+                                attrs: vec![],
                                 by_ref: None,
                                 mutability: None,
                                 ident: syn::Ident::new(&name, Span::call_site()),
                                 subpat: None,
-                            });
+                            }));
                         }
                         Pat::Ident(mut ident) => {
                             ident.mutability = None;
-                            cap.pat = Pat::Ident(ident);
+                            typed.pat = Box::new(Pat::Ident(ident));
                         }
                         _ => {}
-                    },
-                    _ => {}
-                });
+                    }
+                }
+            });
 
             // The calling site is already in an unsafe block, so removing it from just the
             // exported binding is fine.
