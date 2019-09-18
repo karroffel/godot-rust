@@ -376,45 +376,45 @@ pub fn generate_methods(
 
 fn generate_argument_pre(w: &mut impl Write, ty: &Ty, name: &str) -> GeneratorResult {
     match ty {
-        &Ty::Bool
-        | &Ty::F64
-        | &Ty::I64
-        | &Ty::Vector2
-        | &Ty::Vector3
-        | &Ty::Transform
-        | &Ty::Transform2D
-        | &Ty::Quat
-        | &Ty::Plane
-        | &Ty::Aabb
-        | &Ty::Basis
-        | &Ty::Rect2
-        | &Ty::Color => {
+        Ty::Bool
+        | Ty::F64
+        | Ty::I64
+        | Ty::Vector2
+        | Ty::Vector3
+        | Ty::Transform
+        | Ty::Transform2D
+        | Ty::Quat
+        | Ty::Plane
+        | Ty::Aabb
+        | Ty::Basis
+        | Ty::Rect2
+        | Ty::Color => {
             writeln!(
                 w,
                 r#"        (&{name}) as *const _ as *const _,"#,
                 name = name
             )?;
         }
-        &Ty::Variant
-        | &Ty::String
-        | &Ty::Rid
-        | &Ty::NodePath
-        | &Ty::VariantArray
-        | &Ty::Dictionary
-        | &Ty::ByteArray
-        | &Ty::StringArray
-        | &Ty::Vector2Array
-        | &Ty::Vector3Array
-        | &Ty::ColorArray
-        | &Ty::Int32Array
-        | &Ty::Float32Array => {
+        Ty::Variant
+        | Ty::String
+        | Ty::Rid
+        | Ty::NodePath
+        | Ty::VariantArray
+        | Ty::Dictionary
+        | Ty::ByteArray
+        | Ty::StringArray
+        | Ty::Vector2Array
+        | Ty::Vector3Array
+        | Ty::ColorArray
+        | Ty::Int32Array
+        | Ty::Float32Array => {
             writeln!(
                 w,
                 r#"        {name}.sys() as *const _ as *const _,"#,
                 name = name
             )?;
         }
-        &Ty::Object(_) => {
+        Ty::Object(_) => {
             writeln!(w, r#"        if let Some(arg) = {name} {{ arg.this as *const _ as *const _ }} else {{ ptr::null() }},"#,
                 name = name,
             )?;
@@ -427,51 +427,51 @@ fn generate_argument_pre(w: &mut impl Write, ty: &Ty, name: &str) -> GeneratorRe
 
 fn generate_return_pre(w: &mut impl Write, ty: &Ty) -> GeneratorResult {
     match ty {
-        &Ty::Void => {
+        Ty::Void => {
             writeln!(w, r#"
     let ret_ptr = ptr::null_mut();"#)?;
         },
-        &Ty::F64 => {
+        Ty::F64 => {
             writeln!(w, r#"
     let mut ret = 0.0f64;
     let ret_ptr = &mut ret as *mut _;"#
             )?;
         },
-        &Ty::I64 => {
+        Ty::I64 => {
             writeln!(w, r#"
     let mut ret = 0i64;
     let ret_ptr = &mut ret as *mut _;"#
             )?;
         },
-        &Ty::Bool => {
+        Ty::Bool => {
             writeln!(w, r#"
     let mut ret = false;
     let ret_ptr = &mut ret as *mut _;"#
             )?;
         },
-        &Ty::String
-        | &Ty::Vector2
-        | &Ty::Vector3
-        | &Ty::Transform
-        | &Ty::Transform2D
-        | &Ty::Quat
-        | &Ty::Plane
-        | &Ty::Rect2
-        | &Ty::Basis
-        | &Ty::Color
-        | &Ty::NodePath
-        | &Ty::Variant
-        | &Ty::Aabb
-        | &Ty::VariantArray
-        | &Ty::Dictionary
-        | &Ty::ByteArray
-        | &Ty::StringArray
-        | &Ty::Vector2Array
-        | &Ty::Vector3Array
-        | &Ty::ColorArray
-        | &Ty::Int32Array
-        | &Ty::Float32Array
-        | &Ty::Rid
+        Ty::String
+        | Ty::Vector2
+        | Ty::Vector3
+        | Ty::Transform
+        | Ty::Transform2D
+        | Ty::Quat
+        | Ty::Plane
+        | Ty::Rect2
+        | Ty::Basis
+        | Ty::Color
+        | Ty::NodePath
+        | Ty::Variant
+        | Ty::Aabb
+        | Ty::VariantArray
+        | Ty::Dictionary
+        | Ty::ByteArray
+        | Ty::StringArray
+        | Ty::Vector2Array
+        | Ty::Vector3Array
+        | Ty::ColorArray
+        | Ty::Int32Array
+        | Ty::Float32Array
+        | Ty::Rid
         => {
             writeln!(w, r#"
     let mut ret = {sys_ty}::default();
@@ -479,26 +479,26 @@ fn generate_return_pre(w: &mut impl Write, ty: &Ty) -> GeneratorResult {
                 sys_ty = ty.to_sys().unwrap()
             )?;
         }
-        &Ty::Object(_) // TODO: double check
+        Ty::Object(_) // TODO: double check
         => {
             writeln!(w, r#"
     let mut ret: *mut sys::godot_object = ptr::null_mut();
     let ret_ptr = (&mut ret) as *mut _;"#
             )?;
         }
-        &Ty::Result => {
+        Ty::Result => {
             writeln!(w, r#"
     let mut ret: sys::godot_error = sys::godot_error_GODOT_OK;
     let ret_ptr = (&mut ret) as *mut _;"#
             )?;
         }
-        &Ty::VariantType => {
+        Ty::VariantType => {
             writeln!(w, r#"
     let mut ret: sys::godot_variant_type = sys::godot_variant_type_GODOT_VARIANT_TYPE_NIL;
     let ret_ptr = (&mut ret) as *mut _;"#
             )?;
         }
-        &Ty::Enum(ref name) => {
+        Ty::Enum(ref name) => {
             writeln!(w, r#"
     let mut ret: {} = mem::transmute(0);
     let ret_ptr = (&mut ret) as *mut _;"#,
@@ -512,41 +512,41 @@ fn generate_return_pre(w: &mut impl Write, ty: &Ty) -> GeneratorResult {
 
 fn generate_return_post(w: &mut impl Write, ty: &Ty) -> GeneratorResult {
     match ty {
-        &Ty::Void => {}
-        &Ty::F64 | &Ty::I64 | &Ty::Bool => {
+        Ty::Void => {}
+        Ty::F64 | Ty::I64 | Ty::Bool => {
             writeln!(
                 w,
                 r#"
     ret"#
             )?;
         }
-        &Ty::Vector2
-        | &Ty::Vector3
-        | &Ty::Transform
-        | &Ty::Transform2D
-        | &Ty::Quat
-        | &Ty::Aabb
-        | &Ty::Rect2
-        | &Ty::Basis
-        | &Ty::Plane
-        | &Ty::Color => {
+        Ty::Vector2
+        | Ty::Vector3
+        | Ty::Transform
+        | Ty::Transform2D
+        | Ty::Quat
+        | Ty::Aabb
+        | Ty::Rect2
+        | Ty::Basis
+        | Ty::Plane
+        | Ty::Color => {
             writeln!(w, r#"    mem::transmute(ret)"#)?;
         }
-        &Ty::Rid => {
+        Ty::Rid => {
             writeln!(w, r#"    Rid::from_sys(ret)"#)?;
         }
-        &Ty::String
-        | &Ty::NodePath
-        | &Ty::VariantArray
-        | &Ty::Dictionary
-        | &Ty::ByteArray
-        | &Ty::StringArray
-        | &Ty::Vector2Array
-        | &Ty::Vector3Array
-        | &Ty::ColorArray
-        | &Ty::Int32Array
-        | &Ty::Float32Array
-        | &Ty::Variant => {
+        Ty::String
+        | Ty::NodePath
+        | Ty::VariantArray
+        | Ty::Dictionary
+        | Ty::ByteArray
+        | Ty::StringArray
+        | Ty::Vector2Array
+        | Ty::Vector3Array
+        | Ty::ColorArray
+        | Ty::Int32Array
+        | Ty::Float32Array
+        | Ty::Variant => {
             writeln!(
                 w,
                 r#"
@@ -554,7 +554,7 @@ fn generate_return_post(w: &mut impl Write, ty: &Ty) -> GeneratorResult {
                 rust_ty = ty.to_rust().unwrap()
             )?;
         }
-        &Ty::Object(ref name) => {
+        Ty::Object(ref name) => {
             writeln!(
                 w,
                 r#"
@@ -566,21 +566,21 @@ fn generate_return_post(w: &mut impl Write, ty: &Ty) -> GeneratorResult {
                 name
             )?;
         }
-        &Ty::Result => {
+        Ty::Result => {
             writeln!(
                 w,
                 r#"
     result_from_sys(ret)"#
             )?;
         }
-        &Ty::Enum(_) => {
+        Ty::Enum(_) => {
             writeln!(
                 w,
                 r#"
     ret"#,
             )?;
         }
-        &Ty::VariantType => {
+        Ty::VariantType => {
             writeln!(
                 w,
                 r#"

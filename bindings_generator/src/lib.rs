@@ -22,21 +22,22 @@ use std::io;
 
 pub type GeneratorResult<T = ()> = Result<T, io::Error>;
 
-pub fn generate_bindings(
+pub fn generate_bindings<H>(
     output_types_impls: &mut impl Write,
     output_trait_impls: &mut impl Write,
     output_method_table: &mut impl Write,
-    ignore: Option<HashSet<String>>,
-) -> GeneratorResult {
-    let to_ignore = ignore.unwrap_or_default();
-
-    let api = Api::new();
+    ignore: HashSet<String, H>,
+) -> GeneratorResult
+where
+    H: std::hash::BuildHasher,
+{
+    let api = Api::new_from_api_json();
 
     generate_imports(output_types_impls)?;
 
     for class in &api.classes {
         // ignore classes that have been generated before.
-        if to_ignore.contains(&class.name) {
+        if ignore.contains(&class.name) {
             continue;
         }
 
@@ -66,7 +67,7 @@ pub fn generate_class(
     output_method_table: &mut impl Write,
     class_name: &str,
 ) -> GeneratorResult {
-    let api = Api::new();
+    let api = Api::new_from_api_json();
 
     let class = api.find_class(class_name);
 

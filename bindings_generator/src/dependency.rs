@@ -8,13 +8,14 @@ use std::collections::HashSet;
 ///
 /// If many classes should be checked, a previous result can be
 /// passed to avoid unnecessary checks.
-pub fn strongly_connected_components(
+pub fn strongly_connected_components<H>(
     api: &Api,
     class: &str,
-    visited: Option<HashSet<String>>,
-) -> HashSet<String> {
-    let mut visited = visited.unwrap_or_default();
-
+    mut visited: HashSet<String, H>,
+) -> HashSet<String, H>
+where
+    H: std::hash::BuildHasher,
+{
     if let Some(class) = api.find_class(class) {
         visit(api, class, &mut visited);
     }
@@ -22,7 +23,10 @@ pub fn strongly_connected_components(
     visited
 }
 
-fn visit(api: &Api, class: &GodotClass, visited: &mut HashSet<String>) {
+fn visit<H>(api: &Api, class: &GodotClass, visited: &mut HashSet<String, H>)
+where
+    H: std::hash::BuildHasher,
+{
     visited.insert(class.name.clone());
 
     let mut to_visit = HashSet::new();
