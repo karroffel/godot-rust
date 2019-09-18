@@ -1,5 +1,11 @@
 #![allow(non_snake_case)] // because of the generated bindings.
 #![allow(unused_imports)]
+#![allow(clippy::unused_unit)]
+#![allow(clippy::trivially_copy_pass_by_ref)]
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::wrong_self_convention)]
+#![allow(clippy::identity_op)]
+#![allow(clippy::unreadable_literal)]
 
 pub use gdnative_core::*;
 

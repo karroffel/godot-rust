@@ -67,7 +67,7 @@ impl SceneCreate {
             Ok(mut spatial) => {
                 // Here is how you rename the child...
                 let key_str = format!("child_{}", self.children_spawned);
-                spatial.set_name(GodotString::from_str(&key_str));
+                spatial.set_name(GodotString::from(&key_str));
 
                 let x = (self.children_spawned % 10) as f32;
                 let z = (self.children_spawned / 10) as f32;
@@ -94,7 +94,7 @@ impl SceneCreate {
             return;
         }
 
-        assert_eq!(self.children_spawned as i64, num_children);
+        assert_eq!(i64::from(self.children_spawned), num_children);
 
         let last_child = owner.get_child(num_children - 1);
         if let Some(mut node) = last_child {
@@ -112,8 +112,8 @@ fn init(handle: gdnative::init::InitHandle) {
 
 pub fn load_scene(path: &str) -> Option<PackedScene> {
     let scene = ResourceLoader::godot_singleton().load(
-        GodotString::from_str(path), // could also use path.into() here
-        GodotString::from_str("PackedScene"),
+        GodotString::from(path), // could also use path.into() here
+        GodotString::from("PackedScene"),
         false,
     );
 
@@ -146,12 +146,12 @@ unsafe fn update_panel(owner: &mut gdnative::Spatial, num_children: i64) {
     //   from earlier)
     let panel_node_opt = owner
         .get_parent()
-        .and_then(|parent| parent.find_node(GodotString::from_str("Panel"), true, false));
+        .and_then(|parent| parent.find_node(GodotString::from("Panel"), true, false));
     if let Some(panel_node) = panel_node_opt {
         // Put the Node
         let mut as_variant = Variant::from_object(&panel_node);
         match as_variant.call(
-            &GodotString::from_str("set_num_children"),
+            &GodotString::from("set_num_children"),
             &[Variant::from_u64(num_children as u64)],
         ) {
             Ok(_) => godot_print!("Called Panel OK."),

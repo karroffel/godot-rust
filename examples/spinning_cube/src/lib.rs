@@ -38,11 +38,11 @@ impl godot::NativeClass for RustTest {
 
         builder.add_property(Property {
             name: "test/test_enum",
-            default: GodotString::from_str("Hello"),
+            default: GodotString::from("Hello"),
             hint: PropertyHint::Enum {
                 values: &["Hello", "World", "Testing"],
             },
-            getter: |_: &RustTest| GodotString::from_str("Hello"),
+            getter: |_: &RustTest| GodotString::from("Hello"),
             setter: (),
             usage: PropertyUsage::DEFAULT,
         });

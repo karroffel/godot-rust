@@ -179,9 +179,9 @@ define_access_guard! {
 godot_test!(
     test_vector2_array_access {
         let mut arr = Vector2Array::new();
-        arr.push(&Vector2::new(1.0, 2.0));
-        arr.push(&Vector2::new(3.0, 4.0));
-        arr.push(&Vector2::new(5.0, 6.0));
+        arr.push(Vector2::new(1.0, 2.0));
+        arr.push(Vector2::new(3.0, 4.0));
+        arr.push(Vector2::new(5.0, 6.0));
 
         let original_read = {
             let read = arr.read();

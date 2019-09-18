@@ -185,6 +185,7 @@ godot_test!(
             }
         }
 
+        #[allow(clippy::float_cmp)]
         for i in 0..8 {
             assert_eq!(i as f32 * 2.0, cow_arr.get(i as i32));
         }

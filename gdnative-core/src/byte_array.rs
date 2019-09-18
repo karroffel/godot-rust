@@ -186,7 +186,7 @@ godot_test!(
         }
 
         for i in 0..8 {
-            assert_eq!(i * 2, cow_arr.get(i as i32));
+            assert_eq!(i * 2, cow_arr.get(i32::from(i)));
         }
 
         // the write shouldn't have affected the original array

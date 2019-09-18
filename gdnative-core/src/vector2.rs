@@ -17,6 +17,9 @@ impl FromVariant for Vector2 {
 
 godot_test!(
     test_vector2_variants {
+        // All of those should either be direct bit-copies or values that had
+        // the exact same operations running on them in the exact same order.
+        #[allow(clippy::float_cmp)]
         fn test(vector: Vector2, set_to: Vector2) {
             let api = crate::get_api();
 
@@ -45,6 +48,9 @@ godot_test!(
     );
 
 #[cfg(test)]
+// All of those should either be direct bit-copies or values that had
+// the exact same operations running on them in the exact same order.
+#[allow(clippy::float_cmp)]
 mod tests {
     use super::Vector2;
 

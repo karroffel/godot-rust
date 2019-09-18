@@ -143,30 +143,30 @@ impl fmt::Debug for Dictionary {
 
 godot_test!(test_dictionary {
     use crate::VariantType;
-    let foo = Variant::from_str("foo");
-    let bar = Variant::from_str("bar");
-    let nope = Variant::from_str("nope");
+    let foo_key = Variant::from("foo");
+    let bar_key = Variant::from("bar");
+    let nope_key = Variant::from("nope");
 
     let x = Variant::from_i64(42);
     let y = Variant::from_i64(1337);
 
     let mut dict = Dictionary::new();
 
-    dict.set(&foo, &x);
-    dict.set(&bar, &y);
+    dict.set(&foo_key, &x);
+    dict.set(&bar_key, &y);
 
-    assert!(dict.contains(&foo));
-    assert!(dict.contains(&bar));
-    assert!(!dict.contains(&nope));
+    assert!(dict.contains(&foo_key));
+    assert!(dict.contains(&bar_key));
+    assert!(!dict.contains(&nope_key));
 
     let mut keys_array = dict.keys();
-    let baz = Variant::from_str("baz");
-    keys_array.push(&baz);
-    dict.set(&baz, &x);
+    let baz_key = Variant::from("baz");
+    keys_array.push(&baz_key);
+    dict.set(&baz_key, &x);
 
     assert!(dict.contains_all(&keys_array));
 
-    dict.erase(&baz);
+    dict.erase(&baz_key);
 
     assert!(!dict.contains_all(&keys_array));
 
@@ -175,8 +175,8 @@ godot_test!(test_dictionary {
 
     let dict2 = dict.new_ref();
     assert!(dict == dict2);
-    assert!(dict2.contains(&foo));
-    assert!(dict2.contains(&bar));
+    assert!(dict2.contains(&foo_key));
+    assert!(dict2.contains(&bar_key));
 
     if let Some(dic_variant) = variant.try_to_dictionary() {
         assert!(dic_variant == dict);

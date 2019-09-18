@@ -341,23 +341,23 @@ impl PartialOrd for StringName {
 
 godot_test!(test_string {
     use crate::VariantType;
-    let foo: GodotString = "foo".into();
-    assert_eq!(foo.len(), 3);
+    let foo_str: GodotString = "foo".into();
+    assert_eq!(foo_str.len(), 3);
 
-    let foo2 = foo.new_ref();
-    assert!(foo == foo2);
+    let foo2 = foo_str.new_ref();
+    assert!(foo_str == foo2);
 
-    let variant = Variant::from_godot_string(&foo);
+    let variant = Variant::from_godot_string(&foo_str);
     assert!(variant.get_type() == VariantType::GodotString);
 
     let variant2: Variant = "foo".into();
     assert!(variant == variant2);
 
     if let Some(foo_variant) = variant.try_to_godot_string() {
-        assert!(foo_variant == foo);
+        assert!(foo_variant == foo_str);
     } else {
         panic!("variant should be a GodotString");
     }
 
-    assert_eq!(foo.to_utf8().as_str(), "foo");
+    assert_eq!(foo_str.to_utf8().as_str(), "foo");
 });

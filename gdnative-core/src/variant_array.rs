@@ -236,31 +236,31 @@ impl<'a> Iterator for IterMut<'a> {
 }
 
 godot_test!(test_array {
-    let foo = Variant::from_str("foo");
-    let bar = Variant::from_str("bar");
-    let nope = Variant::from_str("nope");
+    let foo_elem = Variant::from("foo");
+    let bar_elem = Variant::from("bar");
+    let nope = Variant::from("nope");
 
     let mut array = VariantArray::new(); // []
 
     assert!(array.is_empty());
     assert_eq!(array.len(), 0);
 
-    array.push(&foo); // [&foo]
-    array.push(&bar); // [&foo, &bar]
+    array.push(&foo_elem); // [&foo_elem]
+    array.push(&bar_elem); // [&foo_elem, &bar_elem]
 
     assert_eq!(array.len(), 2);
 
-    assert!(array.contains(&foo));
-    assert!(array.contains(&bar));
+    assert!(array.contains(&foo_elem));
+    assert!(array.contains(&bar_elem));
     assert!(!array.contains(&nope));
 
-    array.set(0, &bar); // [&bar, &bar]
-    array.set(1, &foo); // [&bar, &foo]
+    array.set(0, &bar_elem); // [&bar_elem, &bar_elem]
+    array.set(1, &foo_elem); // [&bar_elem, &foo_elem]
 
-    assert_eq!(array.get_ref(0), &bar);
-    assert_eq!(array.get_ref(1), &foo);
+    assert_eq!(array.get_ref(0), &bar_elem);
+    assert_eq!(array.get_ref(1), &foo_elem);
 
-    array.pop(); // [&bar]
+    array.pop(); // [&bar_elem]
     array.pop(); // []
 
     let x = Variant::from_i64(42);
@@ -288,12 +288,12 @@ godot_test!(test_array {
     array.resize(0); // []
     assert!(array.is_empty());
 
-    array.push(&foo); // [&foo]
-    array.push(&bar); // [&foo, &bar]
+    array.push(&foo_elem); // [&foo_elem]
+    array.push(&bar_elem); // [&foo_elem, &bar_elem]
 
     let array2 = array.new_ref();
-    assert!(array2.contains(&foo));
-    assert!(array2.contains(&bar));
+    assert!(array2.contains(&foo_elem));
+    assert!(array2.contains(&bar_elem));
     assert!(!array2.contains(&nope));
 
     let mut array3 = VariantArray::new(); // []

@@ -658,7 +658,7 @@ godot_test!(
         assert!(nil.try_to_vector2().is_none());
         assert!(nil.try_to_basis().is_none());
 
-        assert!(!nil.has_method(&GodotString::from_str("foo")));
+        assert!(!nil.has_method(&GodotString::from("foo")));
 
         let clone = nil.clone();
         assert!(clone == nil);

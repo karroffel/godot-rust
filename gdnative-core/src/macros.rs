@@ -29,11 +29,9 @@ macro_rules! godot_gdnative_init {
     ($callback:ident as $fn_name:ident) => {
         #[no_mangle]
         #[doc(hidden)]
-        pub extern "C" fn $fn_name(options: *mut $crate::sys::godot_gdnative_init_options) {
-            unsafe {
-                $crate::GODOT_API = Some($crate::GodotApi::from_raw((*options).api_struct));
-                $crate::GDNATIVE_LIBRARY_SYS = Some((*options).gd_native_library);
-            }
+        pub unsafe extern "C" fn $fn_name(options: *mut $crate::sys::godot_gdnative_init_options) {
+            $crate::GODOT_API = Some($crate::GodotApi::from_raw((*options).api_struct));
+            $crate::GDNATIVE_LIBRARY_SYS = Some((*options).gd_native_library);
             let api = $crate::get_api();
             // Force the initialization of the method table of common types. This way we can
             // assume that if the api object is alive we can fetch the method of these types
@@ -80,12 +78,12 @@ macro_rules! godot_gdnative_terminate {
     ($callback:ident as $fn_name:ident) => {
         #[no_mangle]
         #[doc(hidden)]
-        pub extern "C" fn $fn_name(options: *mut $crate::sys::godot_gdnative_terminate_options) {
+        pub unsafe extern "C" fn $fn_name(
+            options: *mut $crate::sys::godot_gdnative_terminate_options,
+        ) {
             $callback(options);
 
-            unsafe {
-                $crate::GODOT_API = None;
-            }
+            $crate::GODOT_API = None;
         }
     };
 }
@@ -119,10 +117,8 @@ macro_rules! godot_nativescript_init {
     ($callback:ident as $fn_name:ident) => {
         #[no_mangle]
         #[doc(hidden)]
-        pub extern "C" fn $fn_name(handle: *mut $crate::libc::c_void) {
-            unsafe {
-                $callback($crate::init::InitHandle::new(handle));
-            }
+        pub unsafe extern "C" fn $fn_name(handle: *mut $crate::libc::c_void) {
+            $callback($crate::init::InitHandle::new(handle));
         }
     };
 }
@@ -135,7 +131,7 @@ macro_rules! godot_print {
 
         #[allow(unused_unsafe)]
         unsafe {
-            let msg = $crate::GodotString::from_str(msg);
+            let msg = $crate::GodotString::from(msg);
             ($crate::get_api().godot_print)(&msg.to_sys() as *const _);
         }
     });
@@ -497,7 +493,7 @@ macro_rules! godot_wrap_method_inner {
 
                 let mut offset = 0;
                 $(
-                    let _variant: &$crate::Variant = ::std::mem::transmute(&mut **(args.offset(offset)));
+                    let _variant: &$crate::Variant = &(*(args.offset(offset) as *const _ as *const $crate::Variant));
                     let $pname = if let Some(val) = <$pty as $crate::FromVariant>::from_variant(_variant) {
                         val
                     } else {

@@ -1,3 +1,5 @@
+#![allow(clippy::blacklisted_name)]
+
 use gdnative::*;
 use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
 use std::sync::Arc;
@@ -59,7 +61,7 @@ fn test_constructor() -> bool {
         let _ = path.get_z_index();
     }
 
-    return true;
+    true
 }
 
 fn test_underscore_method_binding() -> bool {
